@@ -1,0 +1,345 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="description"
+          content="Discover Finnish student restaurants, explore their locations and check daily and weekly menus.">
+
+    <title>CampusEats | Student Restaurant Guide</title>
+
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- Leaflet map stylesheet -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- Leaflet library must load before our JavaScript that's what defer does -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            defer></script>
+
+    <!-- application JavaScript -->
+    <script src="t5.js" defer></script>
+</head>
+
+<body>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="container header-content">
+
+            <a href="#" class="logo" aria-label="CampusEats home">
+                <span class="logo-icon">C</span>
+                <span>Campus<span class="logo-accent">Eats</span></span>
+            </a>
+
+            <nav class="main-nav" aria-label="Main navigation">
+                <a href="#restaurants">Restaurants</a>
+                <a href="#map-section">Map</a>
+                <a href="#about">About</a>
+            </nav>
+
+        </div>
+    </header>
+
+
+    <main>
+
+        <!-- Hero section -->
+        <section class="hero">
+            <div class="container hero-content">
+
+                <p class="eyebrow">YOUR GUIDE TO STUDENT DINING</p>
+
+                <h1>
+                    Find your next
+                    <span>campus meal.</span>
+                </h1>
+
+                <p class="hero-description">
+                    Discover student restaurants across Finland.
+                    Explore locations and find today's and weekly menus
+                    in one place.
+                </p>
+
+                <a href="#restaurants" class="primary-button">
+                    Explore restaurants
+                    <span aria-hidden="true">→</span>
+                </a>
+
+            </div>
+        </section>
+
+
+        <!-- Restaurant directory and menu -->
+        <section class="main-section container" id="restaurants">
+
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">DISCOVER PLACES TO EAT</p>
+                    <h2>Student restaurants</h2>
+                    <p class="section-description">
+                        Find a restaurant and explore its available menus.
+                    </p>
+                </div>
+
+                <p class="restaurant-count" id="restaurant-count">
+                    Loading restaurants...
+                </p>
+            </div>
+
+
+            <div class="content-grid">
+
+                <!-- Restaurant directory -->
+                <section class="directory-panel"
+                         aria-labelledby="directory-title">
+
+                    <div class="panel-heading">
+                        <h3 id="directory-title">Explore restaurants</h3>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="search-wrapper">
+                        <label for="restaurant-search">
+                            Search restaurants
+                        </label>
+
+                        <input
+                            type="search"
+                            id="restaurant-search"
+                            placeholder="Search by name or city..."
+                        >
+                    </div>
+
+
+                    <!-- Filters -->
+                    <div class="filter-row">
+
+                        <div class="filter-group">
+                            <label for="city-filter">City</label>
+
+                            <select id="city-filter">
+                                <option value="all">All cities</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="sort-order">Sort by</label>
+
+                            <select id="sort-order">
+                                <option value="name-asc">Name A–Z</option>
+                                <option value="name-desc">Name Z–A</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+
+                    <!-- Restaurant list -->
+                    <div
+                          class="restaurant-list"
+                          id="restaurant-list"
+                          role="region"
+                          aria-label="Restaurant results"
+                          aria-live="polite"
+                          >
+                        <!-- Restaurant cards will be created by JavaScript lter -->
+                    </div>
+
+
+                    <!-- Loading, error and empty states -->
+                    <p class="status-message" id="loading-message">
+                        Loading restaurants...
+                    </p>
+
+                    <p class="status-message error-message"
+                       id="error-message"
+                       role="alert"
+                       hidden>
+                        Unable to load restaurants. Please try again later.
+                    </p>
+
+                    <p class="status-message" id="empty-message" hidden>
+                        No restaurants found. Try changing your search.
+                    </p>
+
+                </section>
+
+
+                <!-- Menu panel -->
+                <section class="menu-panel"
+                         aria-labelledby="menu-panel-title">
+
+                    <div class="panel-heading">
+                        <div>
+                            <p class="eyebrow">RESTAURANT MENU</p>
+                            <h3 id="menu-panel-title">Explore the menu</h3>
+                        </div>
+                    </div>
+
+
+                    <!-- Initial state before selecting a restaurant -->
+                    <div class="menu-placeholder" id="menu-placeholder">
+
+                        <div class="placeholder-icon" aria-hidden="true">
+                            🍽
+                        </div>
+
+                        <h4>Select a restaurant</h4>
+
+                        <p>
+                            Choose a restaurant from the list to see
+                            its information and available menus.
+                        </p>
+
+                    </div>
+
+
+                    <!-- Selected restaurant information -->
+                    <div id="selected-restaurant" hidden>
+
+                        <div class="selected-restaurant-info">
+
+                            <h4 id="selected-name">Restaurant Name</h4>
+
+                            <p id="selected-address"></p>
+
+                        </div>
+
+
+                        <!-- Daily and weekly menu tabs -->
+                        <div class="menu-tabs"
+                             role="group"
+                             aria-label="Choose menu period">
+
+                            <button
+                                type="button"
+                                class="menu-tab active"
+                                id="daily-tab"
+                                aria-pressed="true">
+                                Daily menu
+                            </button>
+
+                            <button
+                                type="button"
+                                class="menu-tab"
+                                id="weekly-tab"
+                                aria-pressed="false">
+                                Weekly menu
+                            </button>
+
+                        </div>
+
+
+                        <!-- Menu loading and error messages -->
+                        <p class="status-message"
+                           id="menu-loading"
+                           hidden>
+                            Loading menu...
+                        </p>
+
+                        <p class="status-message error-message"
+                           id="menu-error"
+                           role="alert"
+                           hidden>
+                            Unable to load the menu.
+                        </p>
+
+
+                        <!-- Menu courses will be displayed here -->
+                        <div class="menu-content" id="menu-content">
+                        </div>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </section>
+
+
+        <!-- Map section -->
+        <section class="map-section container" id="map-section">
+
+            <div class="section-heading">
+
+                <div>
+                    <p class="eyebrow">EXPLORE LOCATIONS</p>
+
+                    <h2>Find restaurants on the map</h2>
+
+                    <p class="section-description">
+                        Explore student restaurants across Finland.
+                        Select a marker to view restaurant information.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- Leaflet map will be initialized here -->
+            <div
+                id="map"
+                role="application"
+                aria-label="Interactive map showing student restaurant locations">
+            </div>
+
+            <p class="map-note">
+                Map data ©
+                <a href="https://www.openstreetmap.org/copyright"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    OpenStreetMap contributors
+                </a>
+            </p>
+
+        </section>
+
+
+        <!-- About section -->
+        <section class="about-section" id="about">
+
+            <div class="container about-content">
+
+                <p class="eyebrow">ABOUT CAMPUSEATS</p>
+
+                <h2>Better lunch decisions, made simple.</h2>
+
+                <p>
+                    CampusEats helps students discover Finnish student
+                    restaurants, explore their locations and check
+                    available daily and weekly menus.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Footer -->
+    <footer class="site-footer">
+
+        <div class="container footer-content">
+
+            <a href="#" class="logo footer-logo">
+                <span class="logo-icon">C</span>
+                <span>Campus<span class="logo-accent">Eats</span></span>
+            </a>
+
+            <p>
+                © 2026 CampusEats. Built as a student web development project.
+            </p>
+
+        </div>
+
+    </footer>
+
+</body>
+</html>
