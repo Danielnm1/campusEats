@@ -114,3 +114,34 @@ function updateMapMarkers(displayedRestaurants) {
     map.fitBounds(bounds, { padding: [30, 30], maxZoom: 14 });
   }
 }
+
+// 5. Restaurant Renderimg & Filter Logic
+function filterAndRenderRestaurants() {
+  const searchTerm = searchInput.value.trim().toLowerCase();
+  const selectedCity = citySelect.value;
+  const sortOrder = sortSelect.value;
+
+  // 1. Filter by search term (Name or City)
+  let filtered = restaurants.filter((r) => {
+    const nameMatch = r.name?.toLowerCase().includes(searchTerm);
+    const cityMatch = r.city?.toLowerCase().includes(searchTerm);
+    return nameMatch || cityMatch;
+  });
+
+  // 2. Filter by City dropdown
+  if (selectedCity !== "all") {
+    filtered = filtered.filter((r) => r.city === selectedCity);
+  }
+
+  // 3. Sort A-Z or Z-A
+  filtered.sort((a, b) => {
+    const nameA = a.name || "";
+    const nameB = b.name || "";
+    return sortOrder === "name-asc"
+      ? nameA.localeCompare(nameB, "fi")
+      : nameB.localeCompare(nameA, "fi");
+  });
+
+  // 4. update result count label
+  restaurantCount.textContent = `${filtered.length} restaurant${filtered.length === 1 ? "" : "s"} found`;
+}
