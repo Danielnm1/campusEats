@@ -255,12 +255,134 @@ function selectRestaurant(restaurant) {
   selectedAddress.textContent = `${restaurant.address || ""}, ${restaurant.postalCode || ""} ${restaurant.city || ""}`;
 
   // center map on selected restaurant if coordinates exist
-if (map && restaurant.location?.coordinates){
-  const coords = restaurant.location.coordinates;
-  if(coords[1] && coords[0]){
-    map.setView([coords[1],coords[0]],15);
+  if (map && restaurant.location?.coordinates) {
+    const coords = restaurant.location.coordinates;
+    if (coords[1] && coords[0]) {
+      map.setView([coords[1], coords[0]], 15);
+    }
+  }
+  // Load menu for selected restaurant
+  loadMenu();
+}
+/**
+ * Fetches and displays daily or weekly menu for the active restaurant
+ */
+
+async function loadMenu() {
+  if (!activeRestaurant) return;
+
+  menuContent.textContent = "";
+  menuError.textContent = "";
+  menuError.hidden = true;
+  menuLoading.hidden = false;
+  menuLoading.textContent = `Loading ${activeMenuType} menu...`;
+
+  try {
+    const restaurantId = activeRestaurant._id;
+    if (!restaurantId) {
+      throw new Error("Selected restaurant has no valid _id.");
+    }
+
+    // Endpoints: /restaurants/daily/:id/en OR /restaurants/weekly/:id/en
+
+    const menuEndpoint = `${API_URL}/restaurants/${activeMenuType}/${encodeURIComponent(restaurantId)}/en`;
+    const menuData = await fetchData(menuEndpoint);
+    menuLoading.hidden = true;
+    displayMenuData(menuData);
+  } catch (error) {
+    menuLoading.hidden = true;
+    menuError.hidden = false;
+    menuError.textContent = `Could not load ${activeMenuType} menu: ${error.message}`;
+    console.error("Menu load error:", error);
+  }
+}
+/**
+ * Renders daily or weekly menu courses inside #menu-content
+ * @param {Object} menuData - Daily or weekly menu payload from Metropolia API
+ */
+
+function displayMenuData(menuData) {
+  menuContent.textContent = "";
+  // ------------------------------
+  // A. Daily Menu Display Logic
+  // ------------------------------
+
+  if (activeMenuType === "daily") {
+    const courses = menuData.courses;
+
+    if (!Array.isArray(courses) || courses.length === 0) {
+      menuContent.textContent = "No menu information available for today.";
+      return;
+    }
+    courses.forEach((course) => {
+      const courseCard = document.createElement("div");
+      courseCard.className = "menu-course";
+      const title = document.createElement("h5");
+      title.textContent = course.name ?? "unnamed course";
+      const price = document.createElement("p");
+      price.className = "course-price";
+      price.textContent = `Price: ${course.price ?? "Student price"}`;
+      const diets = document.createElement("p");
+      diets.textContent = `Diets: ${course.diets ?? "N/A"}`;
+
+      courseCard.appendChild(title);
+      courseCard.appendChild(price);
+      courseCard.appendChild(diets);
+
+      menuContent.appendChild(courseCard);
+    });
+    // ------------------------------
+    // B. Weekly Menu Display Logic
+    // ------------------------------
+  } else if (activeMenuType === "weekly") {
+    const days = menuData.days;
+    if (!Array.isArray(days) || days.length === 0) {
+      menuContent.textContent = "No weekly menu information available.";
+      return;
+    }
+    days.forEach((day) => {
+      const dayBox = document.createElement("div");
+      dayBox.style.marginBottom = "18px";
+      const dayHeading = document.createElement('h4');
+      dayHeading.style.color = 'var(--primary-color)';
+      dayHeading.style.margin = '0 0 8px';
+      dayHeading.textContent = day.date || day.day || 'day' ;
+
+      dayBox.appendChild(dayHeading);
+if (!Array.isArray(day.courses) || day.courses.length === 0) {
+        const noCourse = document.createElement('p');
+        noCourse.style.fontSize = '0.85rem';
+        noCourse.style.color = 'var(--text-muted)';
+        noCourse.textContent = 'No courses served on this day.';
+        dayBox.appendChild(noCourse);
+      } else {
+        day.courses.forEach((course) => {
+          const courseCard = document.createElement('div');
+          courseCard.className = 'menu-course';
+          courseCard.style.marginBottom = '8px';
+
+          const title = document.createElement('h5');
+          title.textContent = course.name ?? 'Unnamed course';
+
+          const price = document.createElement('p');
+          price.className = 'course-price';
+          price.textContent = `Price: ${course.price ?? 'Student price'}`;
+
+          courseCard.appendChild(title);
+          courseCard.appendChild(price);
+          dayBox.appendChild(courseCard);
+        });
+      }
+
+    menuContent.appendChild(dayBox);
+    });
   }
 }
 
+// ----------------------------------------
+// 7. Core Initialization & Event Listeners
+// ----------------------------------------
 
-}
+/**
+ * Loads master restaurant list on startup
+ */
