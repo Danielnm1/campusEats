@@ -18,9 +18,9 @@ const emptyMessage = document.querySelector("empty-message");
 
 // Menu Panel Elements
 const menuPlaceholder = document.querySelector("#menu-placeholder");
-const selectedRestaurant = document.querySelector("#selected-restaurant");
+const selectedRestaurantBox = document.querySelector("#selected-restaurant");
 const selectedName = document.querySelector("#selected-name");
-const SelectedAddress = document.querySelector("selected-address");
+const selectedAddress = document.querySelector("selected-address");
 
 // Menu Controls & States
 const dailyTab = document.querySelector("#daily-tab");
@@ -144,4 +144,123 @@ function filterAndRenderRestaurants() {
 
   // 4. update result count label
   restaurantCount.textContent = `${filtered.length} restaurant${filtered.length === 1 ? "" : "s"} found`;
+
+  // 5. Toggle empty message
+  if (filtered.length === 0) {
+    emptyMessage.hidden = false;
+  } else {
+    emptyMessage.hidden = true;
+  }
+  // 6. Render cards to DOM
+  renderRestaurantCards(filtered);
+
+  // 7. Update Leaflet markers
+  updateMapMarkers(filtered);
+}
+
+function renderRestaurantCards(list) {
+  restaurantList.textContent = "";
+  list.forEach((restaurant) => {
+    const card = document.createElement("div");
+    card.className = "restaurant-card";
+    // Highlight active card
+    if (activeRestaurant && activeRestaurant.id === restaurant.id) {
+      card.classList.add("active");
+    }
+    // Symbol Icon
+    const symbol = document.createElement("div");
+    symbol.className = "restaurant-symbol";
+    symbol.textContent = "🍴";
+    // Text copy
+    const copy = document.createElement("div");
+    copy.className = "restaurant-card-copy";
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "restaurant-card-name";
+    nameSpan.textContent = restaurant.name;
+    const addressSpan = document.createElement("span");
+    addressSpan.className = "restaurant-card-address";
+    addressSpan.textContent = `${restaurant.address || ""}${restaurant.city ? ", " + restaurant.city : ""}`;
+    copy.appendChild(nameSpan);
+    copy.appendChild(addressSpan);
+    // Arrow icon
+    const arrow = document.createElement("span");
+    arrow.className = "card-arrow";
+    arrow.textContent = "→";
+    card.append(symbol);
+    card.append(copy);
+    card.appendChild(arrow);
+    // Click event (event listener)
+    card.addEventListener("click", () => {
+      selectRestaurant(restaurant);
+    });
+    restaurantList.appendChild(card);
+  });
+}
+// Populates the city dropdown with unique city options
+function populateCityFilter() {
+  const cities = [
+    ...new Set(
+      restaurants.map((r) => r.city?.trim()).filter((city) => Boolean(city)),
+    ),
+  ].sort((a, b) => a.localeCompare(b, "fi"));
+
+  // Clear existing options except except "All cities"
+  citySelect.textContent = "";
+  const defaultOption = document.createElement("option");
+  defaultOption.value = "all";
+  defaultOption.textContent = "All cities";
+  citySelect.appendChild(defaultOption);
+
+  cities.forEach((city) => {
+    const option = document.createElement("option");
+    option.value = city;
+    option.textContent = city;
+    citySelect.appendChild(option);
+  });
+}
+//------------------------------------
+// 6 Selection & Menu Fetching
+//------------------------------------
+/**
+ * Handles restaurant card/marker selection
+ * @param {Object} restaurant - Selected restaurant data
+ */
+
+function selectRestaurant(restaurant) {
+  activeRestaurant = restaurant;
+
+  // Highlight selected card in UI list
+  document.querySelectorAll(".restaurant-card").forEach((card) => {
+    card.classList.remove("active");
+  });
+  // Re-render list to ensure highlight state is synchronized
+  renderRestaurantCards(
+    restaurants.filter((r) => {
+      const term = searchInput.value.trim().toLowerCase();
+      const city = citySelect.value;
+      const matchesSearch =
+        r.name?.toLowerCase().includes(term) ||
+        r.city?.toLowerCase().includes(term);
+      const matchesCity = city === "all" || r.city == city;
+      return matchesSearch && matchesCity;
+    }),
+  );
+  // Show selected panel, hide placeholder
+  menuPlaceholder.hidden = true;
+  selectedRestaurantBox.hidden = false;
+
+  // Populate basic indormation
+
+  selectedName.textContent = restaurant.name;
+  selectedAddress.textContent = `${restaurant.address || ""}, ${restaurant.postalCode || ""} ${restaurant.city || ""}`;
+
+  // center map on selected restaurant if coordinates exist
+if (map && restaurant.location?.coordinates){
+  const coords = restaurant.location.coordinates;
+  if(coords[1] && coords[0]){
+    map.setView([coords[1],coords[0]],15);
+  }
+}
+
+
 }
