@@ -8,26 +8,26 @@ const API_URL = "https://media2.edu.metropolia.fi/restaurant/api/v1";
 const searchInput = document.querySelector("#restaurant-search");
 const citySelect = document.querySelector("#city-filter");
 const sortSelect = document.querySelector("#sort-order");
-const restaurantCount = document.querySelector("restaurant-count");
+const restaurantCount = document.querySelector("#restaurant-count");
 
 // Directory Panel States & Container
 const restaurantList = document.querySelector("#restaurant-list");
-const loadingMessage = document.querySelector("loading-message");
+const loadingMessage = document.querySelector("#loading-message");
 const errorMessage = document.querySelector("#error-message");
-const emptyMessage = document.querySelector("empty-message");
+const emptyMessage = document.querySelector("#empty-message");
 
 // Menu Panel Elements
 const menuPlaceholder = document.querySelector("#menu-placeholder");
 const selectedRestaurantBox = document.querySelector("#selected-restaurant");
 const selectedName = document.querySelector("#selected-name");
-const selectedAddress = document.querySelector("selected-address");
+const selectedAddress = document.querySelector("#selected-address");
 
 // Menu Controls & States
 const dailyTab = document.querySelector("#daily-tab");
 const weeklyTab = document.querySelector("#weekly-tab");
 const menuLoading = document.querySelector("#menu-loading");
 const menuError = document.querySelector("#menu-error");
-const menuContent = document.querySelector("menu-content");
+const menuContent = document.querySelector("#menu-content");
 
 // 2. Application State Variables
 
@@ -47,9 +47,7 @@ async function fetchData(url) {
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new console.error(
-      `HTTP: error: ${response.status} ${response.statusText}`,
-    );
+    throw new Error(`HTTP: error: ${response.status} ${response.statusText}`);
   }
   return response.json();
 }
@@ -96,15 +94,14 @@ function updateMapMarkers(displayedRestaurants) {
     const marker = L.marker(latLng).addTo(map);
 
     // popup content
-    const popupCotent = `<div style ="font-family",sans-serif;">
-    <strong style ="font-size: 13px; color: #287a55;">${restaurant.name}</strong><br>
-    <small style = "color: #666;">${restaurant.address || ""}, ${restaurant.city || ""}</small>
-    </div>
-    `;
-    marker.bindPopup(popupCotent);
+    const popupContent = `<div style="font-family: sans-serif;">
+  <strong style="font-size: 13px; color: #287a55;">${restaurant.name}</strong><br>
+  <small style="color: #666;">${restaurant.address || ""}, ${restaurant.city || ""}</small>
+</div>`;
+    marker.bindPopup(popupContent);
     // Click marker -> select restaurant in UI
     marker.on("click", () => {
-      selectedRestaurant(restaurant);
+      selectRestaurant(restaurant);
     });
     mapMarkers.push(marker);
   });
@@ -163,8 +160,9 @@ function renderRestaurantCards(list) {
   list.forEach((restaurant) => {
     const card = document.createElement("div");
     card.className = "restaurant-card";
+    card.dataset.id = restaurant._id;
     // Highlight active card
-    if (activeRestaurant && activeRestaurant.id === restaurant.id) {
+    if (activeRestaurant && activeRestaurant._id === restaurant._id) {
       card.classList.add("active");
     }
     // Symbol Icon
@@ -231,20 +229,9 @@ function selectRestaurant(restaurant) {
 
   // Highlight selected card in UI list
   document.querySelectorAll(".restaurant-card").forEach((card) => {
-    card.classList.remove("active");
+    card.classList.toggle("active", card.dataset.id === restaurant._id);
   });
-  // Re-render list to ensure highlight state is synchronized
-  renderRestaurantCards(
-    restaurants.filter((r) => {
-      const term = searchInput.value.trim().toLowerCase();
-      const city = citySelect.value;
-      const matchesSearch =
-        r.name?.toLowerCase().includes(term) ||
-        r.city?.toLowerCase().includes(term);
-      const matchesCity = city === "all" || r.city == city;
-      return matchesSearch && matchesCity;
-    }),
-  );
+
   // Show selected panel, hide placeholder
   menuPlaceholder.hidden = true;
   selectedRestaurantBox.hidden = false;
@@ -343,38 +330,41 @@ function displayMenuData(menuData) {
     days.forEach((day) => {
       const dayBox = document.createElement("div");
       dayBox.style.marginBottom = "18px";
-      const dayHeading = document.createElement('h4');
-      dayHeading.style.color = 'var(--primary-color)';
-      dayHeading.style.margin = '0 0 8px';
-      dayHeading.textContent = day.date || day.day || 'day' ;
+      const dayHeading = document.createElement("h4");
+      dayHeading.style.color = "var(--primary-color)";
+      dayHeading.style.margin = "0 0 8px";
+      dayHeading.textContent = day.date || day.day || "day";
 
       dayBox.appendChild(dayHeading);
-if (!Array.isArray(day.courses) || day.courses.length === 0) {
-        const noCourse = document.createElement('p');
-        noCourse.style.fontSize = '0.85rem';
-        noCourse.style.color = 'var(--text-muted)';
-        noCourse.textContent = 'No courses served on this day.';
+      if (!Array.isArray(day.courses) || day.courses.length === 0) {
+        const noCourse = document.createElement("p");
+        noCourse.style.fontSize = "0.85rem";
+        noCourse.style.color = "var(--text-muted)";
+        noCourse.textContent = "No courses served on this day.";
         dayBox.appendChild(noCourse);
       } else {
         day.courses.forEach((course) => {
-          const courseCard = document.createElement('div');
-          courseCard.className = 'menu-course';
-          courseCard.style.marginBottom = '8px';
+          const courseCard = document.createElement("div");
+          courseCard.className = "menu-course";
+          courseCard.style.marginBottom = "8px";
 
-          const title = document.createElement('h5');
-          title.textContent = course.name ?? 'Unnamed course';
+          const title = document.createElement("h5");
+          title.textContent = course.name ?? "Unnamed course";
 
-          const price = document.createElement('p');
-          price.className = 'course-price';
-          price.textContent = `Price: ${course.price ?? 'Student price'}`;
+          const price = document.createElement("p");
+          price.className = "course-price";
+          price.textContent = `Price: ${course.price ?? "Student price"}`;
+          const diets = document.createElement("p");
+          diets.textContent = `Diets: ${course.diets ?? "N/A"}`;
 
           courseCard.appendChild(title);
           courseCard.appendChild(price);
+          courseCard.appendChild(diets);
           dayBox.appendChild(courseCard);
         });
       }
 
-    menuContent.appendChild(dayBox);
+      menuContent.appendChild(dayBox);
     });
   }
 }
@@ -386,3 +376,69 @@ if (!Array.isArray(day.courses) || day.courses.length === 0) {
 /**
  * Loads master restaurant list on startup
  */
+async function initApp() {
+  loadingMessage.hidden = false;
+  errorMessage.hidden = true;
+
+  // Initialize Map
+  initMap();
+  try {
+    const data = await fetchData(`${API_URL}/restaurants`);
+
+    // Flexible data extraction
+    if (Array.isArray(data)) {
+      restaurants = data;
+    } else if (Array.isArray(data.restaurants)) {
+      restaurants = data.restaurants;
+    } else if (Array.isArray(data.data)) {
+      restaurants = data.data;
+    } else {
+      throw new Error("Invalid restaurant response format.");
+    }
+    loadingMessage.hidden = true;
+    // Build city dropdown options & render initial state
+    populateCityFilter();
+    filterAndRenderRestaurants();
+  } catch (error) {
+    loadingMessage.hidden = true;
+    errorMessage.hidden = false;
+    errorMessage.textContent = `Could not load restaurants: ${error.message}`;
+    console.error("App init error:", error);
+  }
+}
+// Event Listeners for filters
+
+searchInput.addEventListener("input", filterAndRenderRestaurants);
+citySelect.addEventListener("change", filterAndRenderRestaurants);
+sortSelect.addEventListener("change", filterAndRenderRestaurants);
+
+// Daily / weekly Tab Handlers
+
+dailyTab.addEventListener("click", () => {
+  if (activeMenuType === "daily") return;
+
+  activeMenuType = "daily";
+  dailyTab.classList.add("active");
+  dailyTab.setAttribute("aria-pressed", "true");
+
+  weeklyTab.classList.remove("active");
+  weeklyTab.setAttribute("aria-pressed", "false");
+
+  loadMenu();
+});
+
+weeklyTab.addEventListener("click", () => {
+  if (activeMenuType === "weekly") return;
+
+  activeMenuType = "weekly";
+  weeklyTab.classList.add("active");
+  weeklyTab.setAttribute("aria-pressed", "true");
+
+  dailyTab.classList.remove("active");
+  dailyTab.setAttribute("aria-pressed", "false");
+
+  loadMenu();
+});
+
+// start Application on load
+initApp();
