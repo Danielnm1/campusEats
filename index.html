@@ -9,13 +9,21 @@
           content="Discover Finnish student restaurants, explore their locations and check daily and weekly menus.">
 
     <title>CampusEats | Student Restaurant Guide</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23287a55'/><text x='50' y='68' font-size='60' font-family='sans-serif' font-weight='bold' text-anchor='middle' fill='white'>C</text></svg>">
 
     <!-- Main stylesheet -->
     <link rel="stylesheet" href="style.css">
 
     <!-- Leaflet map stylesheet -->
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      media="print"
+      onload="this.media='all'">
+<noscript>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+</noscript>
 
     <!-- Leaflet library must load before our JavaScript that's what defer does -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -86,9 +94,12 @@
 
                 <div class="hero-image-wrapper">
                     <img
-                        src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80"
+                        src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=75&fm=webp"
                         alt="Fresh student lunch bowl with vegetables and grains"
                         class="hero-image"
+                        width ="600"
+                        height="377"
+                        fetchpriority="high"
                     >
                 </div>
 
@@ -208,9 +219,12 @@
                     <div class="menu-placeholder" id="menu-placeholder">
 
     <img
-        src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=700&q=80"
+        src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=360&q=70&fm=webp"
         alt="Fresh ingredients and healthy student meal preparation"
         class="placeholder-image"
+        width="360"
+        height="218"
+        loading="lazy"
     >
 
     <h4>Select a restaurant</h4>

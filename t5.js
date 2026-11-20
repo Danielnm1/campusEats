@@ -118,6 +118,7 @@ function updateMapMarkers(displayedRestaurants) {
   mapMarkers = [];
 
   const bounds = [];
+  
   displayedRestaurants.forEach((restaurant) => {
     // Check if restaurant has location coordinates
     const coords = restaurant.location?.coordinates;

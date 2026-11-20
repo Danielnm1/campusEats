@@ -9,7 +9,7 @@
     --primary-light: #eaf4ee;
 
     --text-color: #202923;
-    --text-muted: #6d786f;
+    --text-muted: #556057;
 
     --background-color: #ffffff;
     --surface-color: #f7f9f7;
@@ -1108,3 +1108,6 @@ button {
 .map-popup-address {
   color: var(--text-muted);
 }
+
+
+
