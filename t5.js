@@ -68,6 +68,12 @@ let activeMenuType = "daily"; // 'daily' | 'weekly'
 let map = null; //Leaflet map instance
 let mapMarkers = []; // Active Leaflet markers array
 
+let userCoords = null;
+let userMarker = null;
+
+const findNearestBtn = document.getElementById("find-nearest-btn");
+const geoStatus = document.getElementById("geo-status");
+
 // Base URL for uploaded user profile pictures on Metropolia server
 const UPLOADS_URL = "https://media2.edu.metropolia.fi/restaurant/uploads";
 
@@ -90,6 +96,10 @@ async function fetchData(url, options = {}) {
     );
   }
   return data;
+}
+function calculateDistanceKm(lat1, lon1, lat2, lon2) {
+  if (typeof L === "undefined") return Infinity;
+  return L.latLng(lat1, lon1).distanceTo(L.latLng(lat2, lon2)) / 1000;
 }
 
 // 4 Leaflet map Initialization in the #map continer & controls
@@ -118,7 +128,7 @@ function updateMapMarkers(displayedRestaurants) {
   mapMarkers = [];
 
   const bounds = [];
-  
+
   displayedRestaurants.forEach((restaurant) => {
     // Check if restaurant has location coordinates
     const coords = restaurant.location?.coordinates;
@@ -133,13 +143,18 @@ function updateMapMarkers(displayedRestaurants) {
     bounds.push(latLng);
     // Create marker
     const marker = L.marker(latLng).addTo(map);
+    const distanceLine =
+      typeof restaurant.distanceKm === "number"
+        ? `<br><small class="map-popup-address">${restaurant.distanceKm.toFixed(1)} km away</small>`
+        : "";
 
     // Popup content
     const popupContent = `
       <div class="map-popup">
         <strong class="map-popup-title">${restaurant.name}</strong>
         <small class="map-popup-address">${restaurant.address || ""}, ${restaurant.city || ""}</small>
-      </div>
+        ${distanceLine}
+        </div>
     `;
     marker.bindPopup(popupContent);
 
@@ -178,6 +193,10 @@ function filterAndRenderRestaurants() {
 
   const favId = currentUser?.favouriteRestaurant;
   filtered.sort((a, b) => {
+    if (sortOrder === "nearest" && userCoords) {
+      return (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity);
+    }
+
     if (favId) {
       if (a._id === favId && b._id !== favId) return -1;
       if (b._id === favId && a._id !== favId) return 1;
@@ -236,7 +255,15 @@ function renderRestaurantCards(list) {
     addressSpan.textContent = `${restaurant.address || ""}${restaurant.city ? ", " + restaurant.city : ""}`;
     copy.appendChild(nameSpan);
     copy.appendChild(addressSpan);
-
+    if (
+      typeof restaurant.distanceKm === "number" &&
+      isFinite(restaurant.distanceKm)
+    ) {
+      const distBadge = document.createElement("span");
+      distBadge.className = "distance-badge";
+      distBadge.textContent = `${restaurant.distanceKm.toFixed(1)} km away`;
+      copy.appendChild(distBadge);
+    }
     // Favorite Star Button
     const favBtn = document.createElement("button");
     favBtn.type = "button";
@@ -290,6 +317,92 @@ function populateCityFilter() {
     citySelect.appendChild(option);
   });
 }
+
+function handleFindNearest() {
+  if (!("geolocation" in navigator)) {
+    geoStatus.textContent = "Geolocation is not supported by your browser.";
+    geoStatus.className = "geo-status error";
+    geoStatus.hidden = false;
+    return;
+  }
+
+  findNearestBtn.disabled = true;
+  geoStatus.textContent = "Locating you...";
+  geoStatus.className = "geo-status";
+  geoStatus.hidden = false;
+
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const { latitude, longitude } = position.coords;
+      userCoords = { lat: latitude, lon: longitude };
+
+      let closestRestaurant = null;
+
+      restaurants.forEach((restaurant) => {
+        const coords = restaurant.location?.coordinates;
+        if (Array.isArray(coords) && coords.length >= 2) {
+          const [restLon, restLat] = coords;
+          if (!isNaN(restLat) && !isNaN(restLon) && restLat !== 0) {
+            restaurant.distanceKm = calculateDistanceKm(
+              latitude,
+              longitude,
+              restLat,
+              restLon,
+            );
+            if (
+              !closestRestaurant ||
+              restaurant.distanceKm < closestRestaurant.distanceKm
+            ) {
+              closestRestaurant = restaurant;
+            }
+          }
+        }
+      });
+
+      const nearestOption = sortSelect.querySelector('option[value="nearest"]');
+      if (nearestOption) nearestOption.disabled = false;
+      sortSelect.value = "nearest";
+
+      citySelect.value = "all";
+      searchInput.value = "";
+
+      filterAndRenderRestaurants();
+
+      if (map && typeof L !== "undefined") {
+        if (userMarker) userMarker.remove();
+        const userIcon = L.divIcon({
+          className: "user-location-pin",
+          html: '<span class="user-dot" aria-hidden="true"></span>',
+          iconSize: [24, 24],
+          iconAnchor: [12, 12],
+        });
+        userMarker = L.marker([latitude, longitude], { icon: userIcon })
+          .addTo(map)
+          .bindPopup("<strong>You are here</strong>");
+      }
+
+      if (closestRestaurant) {
+        geoStatus.textContent = `Nearest: ${closestRestaurant.name} (${closestRestaurant.distanceKm.toFixed(1)} km away)`;
+        selectRestaurant(closestRestaurant);
+      }
+
+      findNearestBtn.disabled = false;
+    },
+    (err) => {
+      const messages = {
+        1: "Location permission denied. Enable location access to find nearby restaurants.",
+        2: "Unable to determine your location right now.",
+        3: "Location request timed out. Please try again.",
+      };
+      geoStatus.textContent =
+        messages[err.code] || "Could not determine your location.";
+      geoStatus.className = "geo-status error";
+      findNearestBtn.disabled = false;
+    },
+    { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 },
+  );
+}
+
 //------------------------------------
 // 6 Selection & Menu Fetching
 //------------------------------------
@@ -493,6 +606,9 @@ async function initApp() {
 
 searchInput.addEventListener("input", filterAndRenderRestaurants);
 citySelect.addEventListener("change", filterAndRenderRestaurants);
+if (findNearestBtn) {
+  findNearestBtn.addEventListener("click", handleFindNearest);
+}
 sortSelect.addEventListener("change", filterAndRenderRestaurants);
 selectedFavBtn.addEventListener("click", () => {
   if (activeRestaurant) {

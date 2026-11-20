@@ -148,26 +148,36 @@
                         >
                     </div>
 
+<!-- Filters -->
+<div class="filter-row">
 
-                    <!-- Filters -->
-                    <div class="filter-row">
+    <div class="filter-group">
+        <label for="city-filter">City</label>
 
-                        <div class="filter-group">
-                            <label for="city-filter">City</label>
+        <select id="city-filter">
+            <option value="all">All cities</option>
+        </select>
+    </div>
 
-                            <select id="city-filter">
-                                <option value="all">All cities</option>
-                            </select>
-                        </div>
+    <div class="filter-group">
+        <label for="sort-order">Sort by</label>
 
-                        <div class="filter-group">
-                            <label for="sort-order">Sort by</label>
+        <select id="sort-order">
+            <option value="name-asc">Name A–Z</option>
+            <option value="name-desc">Name Z–A</option>
+            <option value="nearest" disabled>Nearest to me</option>
+        </select>
+    </div>
 
-                            <select id="sort-order">
-                                <option value="name-asc">Name A–Z</option>
-                                <option value="name-desc">Name Z–A</option>
-                            </select>
-                        </div>
+</div>
+
+<!-- Geolocation Action -->
+<div class="geo-controls">
+    <button type="button" id="find-nearest-btn" class="geo-btn">
+        📍 Find nearest restaurant
+    </button>
+    <p id="geo-status" class="geo-status" aria-live="polite" hidden></p>
+
 
                     </div>
 

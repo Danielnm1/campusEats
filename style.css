@@ -1109,5 +1109,70 @@ button {
   color: var(--text-muted);
 }
 
+/* Geolocation & Distance Badge */
+.geo-controls {
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
 
+.geo-btn {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--primary-color);
+  background-color: var(--primary-soft);
+  color: var(--primary-dark);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.geo-btn:hover:not(:disabled) {
+  background-color: var(--primary-color);
+  color: #ffffff;
+}
+
+.geo-btn:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.geo-status {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.geo-status.error {
+  color: #b42318;
+}
+
+.distance-badge {
+  display: inline-block;
+  margin-top: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--primary-dark);
+  background-color: var(--primary-soft);
+  border-radius: 999px;
+}
+
+.user-location-pin {
+  background: transparent;
+  border: none;
+}
+
+.user-dot {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: #2563eb;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
+}
 
