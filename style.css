@@ -395,16 +395,6 @@ button {
     text-align: center;
 }
 
-.placeholder-icon {
-    width: 64px;
-    height: 64px;
-    display: grid;
-    place-items: center;
-    margin-bottom: 18px;
-    border-radius: 50%;
-    background-color: var(--primary-light);
-    font-size: 1.8rem;
-}
 
 .menu-placeholder h4 {
     margin: 0 0 8px;
@@ -1080,4 +1070,41 @@ button {
 .is-favorite-card {
   border-color: #f59e0b;
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
+}
+
+/* ======================
+16. WEEKLY MENU & MAP POPUP STYLES
+=============================== */
+
+.weekly-day-group {
+  margin-bottom: 18px;
+}
+
+.weekly-day-heading {
+  margin: 0 0 8px;
+  color: var(--primary-color);
+}
+
+.weekly-empty-day {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.weekly-course {
+  margin-bottom: 8px;
+}
+
+.map-popup {
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.map-popup-title {
+  display: block;
+  color: var(--primary-color);
+  font-size: 0.85rem;
+}
+
+.map-popup-address {
+  color: var(--text-muted);
 }

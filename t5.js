@@ -133,12 +133,15 @@ function updateMapMarkers(displayedRestaurants) {
     // Create marker
     const marker = L.marker(latLng).addTo(map);
 
-    // popup content
-    const popupContent = `<div style="font-family: sans-serif;">
-  <strong style="font-size: 13px; color: #287a55;">${restaurant.name}</strong><br>
-  <small style="color: #666;">${restaurant.address || ""}, ${restaurant.city || ""}</small>
-</div>`;
+    // Popup content
+    const popupContent = `
+      <div class="map-popup">
+        <strong class="map-popup-title">${restaurant.name}</strong>
+        <small class="map-popup-address">${restaurant.address || ""}, ${restaurant.city || ""}</small>
+      </div>
+    `;
     marker.bindPopup(popupContent);
+
     // Click marker -> select restaurant in UI
     marker.on("click", () => {
       selectRestaurant(restaurant);
@@ -383,7 +386,7 @@ function displayMenuData(menuData) {
       const courseCard = document.createElement("div");
       courseCard.className = "menu-course";
       const title = document.createElement("h5");
-      title.textContent = course.name ?? "unnamed course";
+      title.textContent = course.name ?? "Unnamed course";
       const price = document.createElement("p");
       price.className = "course-price";
       price.textContent = `Price: ${course.price ?? "Student price"}`;
@@ -407,24 +410,22 @@ function displayMenuData(menuData) {
     }
     days.forEach((day) => {
       const dayBox = document.createElement("div");
-      dayBox.style.marginBottom = "18px";
+      dayBox.className = "weekly-day-group";
       const dayHeading = document.createElement("h4");
-      dayHeading.style.color = "var(--primary-color)";
-      dayHeading.style.margin = "0 0 8px";
+      dayHeading.className = "weekly-day-heading";
+
       dayHeading.textContent = day.date || day.day || "day";
 
       dayBox.appendChild(dayHeading);
       if (!Array.isArray(day.courses) || day.courses.length === 0) {
         const noCourse = document.createElement("p");
-        noCourse.style.fontSize = "0.85rem";
-        noCourse.style.color = "var(--text-muted)";
+        noCourse.className = "weekly-empty-day";
         noCourse.textContent = "No courses served on this day.";
         dayBox.appendChild(noCourse);
       } else {
         day.courses.forEach((course) => {
           const courseCard = document.createElement("div");
-          courseCard.className = "menu-course";
-          courseCard.style.marginBottom = "8px";
+          courseCard.className = "menu-course weekly-course";
 
           const title = document.createElement("h5");
           title.textContent = course.name ?? "Unnamed course";
@@ -435,9 +436,8 @@ function displayMenuData(menuData) {
           const diets = document.createElement("p");
           diets.textContent = `Diets: ${course.diets ?? "N/A"}`;
 
-          courseCard.appendChild(title);
-          courseCard.appendChild(price);
-          courseCard.appendChild(diets);
+          courseCard.append(title, price, diets);
+
           dayBox.appendChild(courseCard);
         });
       }
@@ -473,8 +473,6 @@ async function initApp() {
     } else {
       throw new Error("Invalid restaurant response format.");
     }
-    loadingMessage.hidden = true;
-
     loadingMessage.hidden = true;
 
     // Restore logged-in user if token exists
@@ -594,6 +592,7 @@ function updateAuthUI() {
     openAuthBtn.hidden = false;
     userProfileBtn.hidden = true;
     navAvatar.hidden = true;
+    navAvatar.removeAttribute("src");
     navAvatarFallback.hidden = false;
   }
 }
@@ -611,7 +610,6 @@ async function checkSavedSession() {
     });
     currentUser = userData;
     updateAuthUI();
-    filterAndRenderRestaurants();
   } catch (error) {
     // Token expired or invalid -> clear stored session
     console.warn("Saved session invalid:", error.message);
