@@ -29,6 +29,37 @@ const menuLoading = document.querySelector("#menu-loading");
 const menuError = document.querySelector("#menu-error");
 const menuContent = document.querySelector("#menu-content");
 
+// Auth & Header User Controls
+const openAuthBtn = document.querySelector("#open-auth-btn");
+const userProfileBtn = document.querySelector("#user-profile-btn");
+const navAvatar = document.querySelector("#nav-avatar");
+const navAvatarFallback = document.querySelector("#nav-avatar-fallback");
+const navUsername = document.querySelector("#nav-username");
+
+// Auth Modal & Forms
+const authModal = document.querySelector("#auth-modal");
+const closeAuthBtn = document.querySelector("#close-auth-btn");
+const loginModeTab = document.querySelector("#login-mode-tab");
+const registerModeTab = document.querySelector("#register-mode-tab");
+const authMessage = document.querySelector("#auth-message");
+const loginForm = document.querySelector("#login-form");
+const registerForm = document.querySelector("#register-form");
+
+const profileModal = document.getElementById("profile-modal");
+const closeProfileBtn = document.getElementById("close-profile-btn");
+const profileMessage = document.getElementById("profile-message");
+const profileAvatarImg = document.getElementById("profile-avatar-img");
+const profileAvatarFallback = document.getElementById(
+  "profile-avatar-fallback",
+);
+const profileDisplayUsername = document.getElementById(
+  "profile-display-username",
+);
+const profileDisplayEmail = document.getElementById("profile-display-email");
+const avatarForm = document.getElementById("avatar-form");
+const avatarFileInput = document.getElementById("avatar-file");
+const logoutBtn = document.getElementById("logout-btn");
+
 // 2. Application State Variables
 
 let restaurants = []; // All raw restaurants fetched from API
@@ -37,19 +68,28 @@ let activeMenuType = "daily"; // 'daily' | 'weekly'
 let map = null; //Leaflet map instance
 let mapMarkers = []; // Active Leaflet markers array
 
+// Base URL for uploaded user profile pictures on Metropolia server
+const UPLOADS_URL = "https://media2.edu.metropolia.fi/restaurant/uploads";
+
+let currentUser = null; // Logged-in user object from API
+let authToken = localStorage.getItem("token") || null; // Saved JWT token
+
 // Dafault map center (Helsinki, Finland)
 const DEFAULT_COORDS = [60.1699, 24.9384];
 const DEFAULT_ZOOM = 11;
 
 // 3. Reusable API Fetch Helper Function
 
-async function fetchData(url) {
-  const response = await fetch(url);
+async function fetchData(url, options = {}) {
+  const response = await fetch(url, options);
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
-    throw new Error(`HTTP: error: ${response.status} ${response.statusText}`);
+    throw new Error(
+      data.message || `HTTP error: ${response.status} ${response.statusText}`,
+    );
   }
-  return response.json();
+  return data;
 }
 
 // 4 Leaflet map Initialization in the #map continer & controls
@@ -396,6 +436,16 @@ async function initApp() {
       throw new Error("Invalid restaurant response format.");
     }
     loadingMessage.hidden = true;
+
+    loadingMessage.hidden = true;
+
+    // Restore logged-in user if token exists
+    await checkSavedSession();
+
+    // Build city dropdown options & render initial state
+    populateCityFilter();
+    filterAndRenderRestaurants();
+
     // Build city dropdown options & render initial state
     populateCityFilter();
     filterAndRenderRestaurants();
@@ -439,6 +489,274 @@ weeklyTab.addEventListener("click", () => {
 
   loadMenu();
 });
+
+// ----------------------------------------
+// 8. Authentication & User Session
+// ----------------------------------------
+
+/**
+ * Displays a feedback message inside the auth modal
+ * @param {string} message - Text to show
+ * @param {boolean} isError - True for red error, false for green success
+ */
+function showAuthMessage(message, isError = true) {
+  authMessage.textContent = message;
+  authMessage.hidden = false;
+  authMessage.className = isError
+    ? "status-message error-message"
+    : "status-message success-message";
+}
+
+function clearAuthMessage() {
+  authMessage.textContent = "";
+  authMessage.hidden = true;
+}
+
+/**
+ * Switches modal between 'login' and 'register' forms
+ * @param {'login' | 'register'} mode
+ */
+function switchAuthMode(mode) {
+  clearAuthMessage();
+  const isLogin = mode === "login";
+
+  loginModeTab.classList.toggle("active", isLogin);
+  loginModeTab.setAttribute("aria-pressed", String(isLogin));
+
+  registerModeTab.classList.toggle("active", !isLogin);
+  registerModeTab.setAttribute("aria-pressed", String(!isLogin));
+
+  loginForm.hidden = !isLogin;
+  registerForm.hidden = isLogin;
+}
+
+/**
+ * Updates top navigation bar based on whether currentUser is logged in
+ */
+function updateAuthUI() {
+  if (currentUser) {
+    openAuthBtn.hidden = true;
+    userProfileBtn.hidden = false;
+    navUsername.textContent = currentUser.username;
+
+    if (currentUser.avatar) {
+      navAvatar.src = `${UPLOADS_URL}/${currentUser.avatar}`;
+      navAvatar.alt = `${currentUser.username}'s avatar`;
+      navAvatar.hidden = false;
+      navAvatarFallback.hidden = true;
+    } else {
+      navAvatar.hidden = true;
+      navAvatarFallback.hidden = false;
+      navAvatarFallback.textContent = currentUser.username
+        .charAt(0)
+        .toUpperCase();
+    }
+  } else {
+    openAuthBtn.hidden = false;
+    userProfileBtn.hidden = true;
+    navAvatar.hidden = true;
+    navAvatarFallback.hidden = false;
+  }
+}
+/**
+ * Restores user session on page load if a JWT token is saved in localStorage
+ */
+async function checkSavedSession() {
+  if (!authToken) return;
+
+  try {
+    const userData = await fetchData(`${API_URL}/users/token`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+    currentUser = userData;
+    updateAuthUI();
+  } catch (error) {
+    // Token expired or invalid -> clear stored session
+    console.warn("Saved session invalid:", error.message);
+    localStorage.removeItem("token");
+    authToken = null;
+    currentUser = null;
+    updateAuthUI();
+  }
+}
+
+/**
+ * Handles new user registration via POST /users
+ */
+async function handleRegister(event) {
+  event.preventDefault();
+  clearAuthMessage();
+
+  const username = registerForm.username.value.trim();
+  const email = registerForm.email.value.trim();
+  const password = registerForm.password.value;
+
+  try {
+    await fetchData(`${API_URL}/users`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, email, password }),
+    });
+
+    registerForm.reset();
+    switchAuthMode("login");
+    loginForm.username.value = username;
+    showAuthMessage("Account created! Please log in.", false);
+  } catch (error) {
+    // Handle Metropolia server's outgoing SMTP mail error (535) gracefully
+    if (error.message.includes("535")) {
+      registerForm.reset();
+      switchAuthMode("login");
+      loginForm.username.value = username;
+      showAuthMessage(
+        "Account registered (confirmation email skipped by server). Please log in!",
+        false,
+      );
+      return;
+    }
+    showAuthMessage(error.message, true);
+  }
+}
+
+/**
+ * Handles user login via POST /auth/login and stores JWT token
+ */
+async function handleLogin(event) {
+  event.preventDefault();
+  clearAuthMessage();
+
+  const username = loginForm.username.value.trim();
+  const password = loginForm.password.value;
+
+  try {
+    const result = await fetchData(`${API_URL}/auth/login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ username, password }),
+    });
+
+    authToken = result.token;
+    currentUser = result.data;
+    localStorage.setItem("token", authToken);
+
+    loginForm.reset();
+    updateAuthUI();
+    authModal.close();
+  } catch (error) {
+    showAuthMessage(error.message, true);
+  }
+}
+
+function openProfileModal() {
+  if (!currentUser) return;
+
+  profileMessage.hidden = true;
+  profileDisplayUsername.textContent = currentUser.username;
+  profileDisplayEmail.textContent = currentUser.email || "";
+
+  if (currentUser.avatar) {
+    profileAvatarImg.src = `${UPLOADS_URL}/${currentUser.avatar}`;
+    profileAvatarImg.hidden = false;
+    profileAvatarFallback.hidden = true;
+  } else {
+    profileAvatarImg.hidden = true;
+    profileAvatarFallback.hidden = false;
+    profileAvatarFallback.textContent = currentUser.username
+      .charAt(0)
+      .toUpperCase();
+  }
+
+  profileModal.showModal();
+}
+
+async function handleAvatarUpload(event) {
+  event.preventDefault();
+  if (!authToken || !avatarFileInput.files[0]) return;
+
+  const formData = new FormData();
+  formData.append("avatar", avatarFileInput.files[0]);
+
+  try {
+    const result = await fetchData(`${API_URL}/users/avatar`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: formData,
+    });
+
+    currentUser = result.data;
+    updateAuthUI();
+    openProfileModal();
+    avatarForm.reset();
+
+    profileMessage.textContent = "Profile picture updated!";
+    profileMessage.className = "status-message success-message";
+    profileMessage.hidden = false;
+  } catch (error) {
+    profileMessage.textContent = error.message;
+    profileMessage.className = "status-message error-message";
+    profileMessage.hidden = false;
+  }
+}
+
+/**
+ * Logs out the current user and clears localStorage token
+ */
+function logoutUser() {
+  localStorage.removeItem("token");
+  authToken = null;
+  currentUser = null;
+  updateAuthUI();
+}
+
+// Auth Modal & Form Event Listeners
+openAuthBtn.addEventListener("click", () => {
+  switchAuthMode("login");
+  authModal.showModal();
+});
+
+closeAuthBtn.addEventListener("click", () => {
+  authModal.close();
+});
+
+// Close modal when clicking outside the inner dialog box (on the backdrop)
+authModal.addEventListener("click", (event) => {
+  if (event.target === authModal) {
+    authModal.close();
+  }
+});
+
+userProfileBtn.addEventListener("click", openProfileModal);
+
+closeProfileBtn.addEventListener("click", () => {
+  profileModal.close();
+});
+
+profileModal.addEventListener("click", (event) => {
+  if (event.target === profileModal) {
+    profileModal.close();
+  }
+});
+
+avatarForm.addEventListener("submit", handleAvatarUpload);
+
+logoutBtn.addEventListener("click", () => {
+  logoutUser();
+  profileModal.close();
+});
+
+loginModeTab.addEventListener("click", () => switchAuthMode("login"));
+registerModeTab.addEventListener("click", () => switchAuthMode("register"));
+
+registerForm.addEventListener("submit", handleRegister);
+loginForm.addEventListener("submit", handleLogin);
 
 // start Application on load
 initApp();

@@ -769,3 +769,259 @@ button {
 .menu-placeholder[hidden] {
   display: none;
 }
+/* =========================================
+14. AUTHENTICATION MODAL & HEADER CONTROLS
+========================================= */
+
+.nav-auth-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--primary-color);
+  border-radius: 7px;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.nav-auth-btn:hover {
+  background-color: var(--primary-dark);
+}
+
+.user-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px 5px 6px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  background-color: var(--surface-color);
+  color: var(--text-color);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.user-badge-btn:hover {
+  border-color: var(--primary-color);
+  background-color: var(--primary-light);
+}
+
+.user-badge-btn[hidden],
+.nav-auth-btn[hidden],
+.auth-form[hidden],
+.nav-avatar[hidden],
+.nav-avatar-fallback[hidden] {
+  display: none;
+}
+
+.nav-avatar,
+.nav-avatar-fallback {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.nav-avatar-fallback {
+  display: grid;
+  place-items: center;
+  background-color: var(--primary-color);
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.auth-dialog {
+  width: min(100% - 32px, 420px);
+  padding: 0;
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  background-color: #ffffff;
+  color: var(--text-color);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+}
+
+.auth-dialog::backdrop {
+  background-color: rgba(18, 32, 24, 0.55);
+  backdrop-filter: blur(3px);
+}
+
+.dialog-inner {
+  padding: 24px;
+}
+
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.dialog-close-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 7px;
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+}
+
+.dialog-close-btn:hover {
+  background-color: var(--surface-color);
+  color: var(--text-color);
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 4px;
+  border-radius: 8px;
+  background-color: var(--surface-color);
+}
+
+.auth-tab {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background-color: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.auth-tab.active {
+  background-color: #ffffff;
+  color: var(--primary-color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.form-field label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.form-field input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  outline: none;
+}
+
+.form-field input:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(40, 122, 85, 0.12);
+}
+
+.full-width-btn {
+  width: 100%;
+  justify-content: center;
+  border: none;
+  margin-top: 4px;
+}
+
+.success-message {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+/* Profile Modal Enhancements */
+.profile-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding: 0.75rem;
+  background-color: var(--bg-subtle, #f8fafc);
+  border-radius: 10px;
+}
+
+.profile-avatar-lg,
+.profile-avatar-lg-fallback {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-avatar-lg-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--primary-color, #16a34a);
+  color: #ffffff;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.profile-summary h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.profile-email {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted, #64748b);
+}
+
+.modal-divider {
+  border: none;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  margin: 1.25rem 0;
+}
+
+.btn-secondary-full {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border-color, #cbd5e1);
+  border-radius: 8px;
+  background-color: #ffffff;
+  color: var(--text-main, #0f172a);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-secondary-full:hover {
+  background-color: #f1f5f9;
+}
+
+.btn-danger-full {
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: 8px;
+  background-color: #dc2626;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-danger-full:hover {
+  background-color: #b91c1c;
+}
+
+/* Ensure HTML hidden attribute always overrides flex/grid display */
+[hidden] {
+  display: none !important;
+}

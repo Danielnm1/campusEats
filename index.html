@@ -40,6 +40,18 @@
                 <a href="#restaurants">Restaurants</a>
                 <a href="#map-section">Map</a>
                 <a href="#about">About</a>
+
+                <!-- Shown when logged out -->
+                <button type="button" class="nav-auth-btn" id="open-auth-btn">
+                    Log in
+                </button>
+
+                <!-- Shown when logged in -->
+                <button type="button" class="user-badge-btn" id="user-profile-btn" hidden>
+                    <img id="nav-avatar" src="" alt="" class="nav-avatar" hidden>
+                    <span class="nav-avatar-fallback" id="nav-avatar-fallback">U</span>
+                    <span id="nav-username">User</span>
+                </button>
             </nav>
 
         </div>
@@ -352,6 +364,114 @@
         </div>
 
     </footer>
+    <!-- Authentication Modal (Login & Register) -->
+    <dialog class="auth-dialog" id="auth-modal" aria-labelledby="auth-modal-title">
+        <div class="dialog-inner">
+
+            <div class="dialog-header">
+                <h3 id="auth-modal-title">Welcome to CampusEats</h3>
+                <button type="button" class="dialog-close-btn" id="close-auth-btn" aria-label="Close modal">
+                    ✕
+                </button>
+            </div>
+
+            <!-- Switch between Login and Register -->
+            <div class="auth-tabs" role="group" aria-label="Authentication mode">
+                <button type="button" class="auth-tab active" id="login-mode-tab" aria-pressed="true">
+                    Log in
+                </button>
+                <button type="button" class="auth-tab" id="register-mode-tab" aria-pressed="false">
+                    Create account
+                </button>
+            </div>
+
+            <!-- Feedback message (errors or success) -->
+            <p class="status-message" id="auth-message" role="alert" hidden></p>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <div class="form-field">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" name="username" required autocomplete="username">
+                </div>
+
+                <div class="form-field">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" required autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="primary-button full-width-btn">
+                    Log in
+                </button>
+            </form>
+
+            <!-- Register Form (alussa ei näy) -->
+            <form id="register-form" class="auth-form" hidden>
+                <div class="form-field">
+                    <label for="register-username">Username</label>
+                    <input type="text" id="register-username" name="username" minlength="3" required autocomplete="username">
+                </div>
+
+                <div class="form-field">
+                    <label for="register-email">Email</label>
+                    <input type="email" id="register-email" name="email" required autocomplete="email">
+                </div>
+
+                <div class="form-field">
+                    <label for="register-password">Password</label>
+                    <input type="password" id="register-password" name="password" minlength="5" required autocomplete="new-password">
+                </div>
+
+                <button type="submit" class="primary-button full-width-btn">
+                    Create account
+                </button>
+            </form>
+
+        </div>
+    </dialog>
+
+<!-- User Profile & Settings Modal -->
+    <dialog id="profile-modal" class="auth-dialog" aria-labelledby="profile-modal-title">
+      <div class="auth-modal-content">
+        <div class="auth-modal-header">
+          <h2 id="profile-modal-title">My Account</h2>
+          <button type="button" id="close-profile-btn" class="close-modal-btn" aria-label="Close modal">
+            &times;
+          </button>
+        </div>
+
+        <p id="profile-message" class="status-message" hidden></p>
+
+        <!-- Profile Summary & Avatar -->
+        <div class="profile-summary">
+          <img id="profile-avatar-img" class="profile-avatar-lg" src="" alt="User avatar" hidden />
+          <div id="profile-avatar-fallback" class="profile-avatar-lg-fallback">U</div>
+          <div>
+            <h3 id="profile-display-username">Username</h3>
+            <p id="profile-display-email" class="profile-email">user@example.com</p>
+          </div>
+        </div>
+
+        <!-- Avatar Upload Form (POST /users/avatar) -->
+        <form id="avatar-form" class="auth-form">
+          <div class="form-group">
+            <label for="avatar-file">Update Profile Picture</label>
+            <input type="file" id="avatar-file" name="avatar" accept="image/*" required />
+          </div>
+          <button type="submit" class="btn-secondary-full">Upload Avatar</button>
+        </form>
+
+        <hr class="modal-divider" />
+
+        <!-- Logout Action -->
+        <button type="button" id="logout-btn" class="btn-danger-full">
+          Log out
+        </button>
+      </div>
+    </dialog>
+
+
+
 
 </body>
 </html>
