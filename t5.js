@@ -21,7 +21,7 @@ const menuPlaceholder = document.querySelector("#menu-placeholder");
 const selectedRestaurantBox = document.querySelector("#selected-restaurant");
 const selectedName = document.querySelector("#selected-name");
 const selectedAddress = document.querySelector("#selected-address");
-
+const selectedFavBtn = document.querySelector("#selected-fav-btn");
 // Menu Controls & States
 const dailyTab = document.querySelector("#daily-tab");
 const weeklyTab = document.querySelector("#weekly-tab");
@@ -170,8 +170,14 @@ function filterAndRenderRestaurants() {
     filtered = filtered.filter((r) => r.city === selectedCity);
   }
 
-  // 3. Sort A-Z or Z-A
+  // 3. Sort: Favorite restaurant first, then A-Z or Z-A
+
+  const favId = currentUser?.favouriteRestaurant;
   filtered.sort((a, b) => {
+    if (favId) {
+      if (a._id === favId && b._id !== favId) return -1;
+      if (b._id === favId && a._id !== favId) return 1;
+    }
     const nameA = a.name || "";
     const nameB = b.name || "";
     return sortOrder === "name-asc"
@@ -205,6 +211,12 @@ function renderRestaurantCards(list) {
     if (activeRestaurant && activeRestaurant._id === restaurant._id) {
       card.classList.add("active");
     }
+    // Highlight favorite card
+    const isFavorite = currentUser?.favouriteRestaurant === restaurant._id;
+    if (isFavorite) {
+      card.classList.add("is-favorite-card");
+    }
+
     // Symbol Icon
     const symbol = document.createElement("div");
     symbol.className = "restaurant-symbol";
@@ -220,12 +232,30 @@ function renderRestaurantCards(list) {
     addressSpan.textContent = `${restaurant.address || ""}${restaurant.city ? ", " + restaurant.city : ""}`;
     copy.appendChild(nameSpan);
     copy.appendChild(addressSpan);
+
+    // Favorite Star Button
+    const favBtn = document.createElement("button");
+    favBtn.type = "button";
+    favBtn.className = `fav-btn${isFavorite ? " is-favorite" : ""}`;
+    favBtn.textContent = isFavorite ? "★" : "☆";
+    favBtn.setAttribute(
+      "aria-label",
+      isFavorite ? "Remove from favorites" : "Set as favorite restaurant",
+    );
+    favBtn.title = isFavorite ? "Your favorite restaurant" : "Set as favorite";
+
+    favBtn.addEventListener("click", (event) => {
+      event.stopPropagation(); // Prevents selecting the card when clicking the star
+      toggleFavoriteRestaurant(restaurant._id);
+    });
+
     // Arrow icon
     const arrow = document.createElement("span");
     arrow.className = "card-arrow";
     arrow.textContent = "→";
     card.append(symbol);
     card.append(copy);
+    card.append(favBtn);
     card.appendChild(arrow);
     // Click event (event listener)
     card.addEventListener("click", () => {
@@ -259,6 +289,14 @@ function populateCityFilter() {
 //------------------------------------
 // 6 Selection & Menu Fetching
 //------------------------------------
+function updateSelectedFavButton(restaurant) {
+  if (!selectedFavBtn || !restaurant) return;
+  const isFavorite = currentUser?.favouriteRestaurant === restaurant._id;
+  selectedFavBtn.hidden = false;
+  selectedFavBtn.textContent = isFavorite ? "★ Favorite" : "☆ Set Favorite";
+  selectedFavBtn.classList.toggle("is-favorite", isFavorite);
+}
+
 /**
  * Handles restaurant card/marker selection
  * @param {Object} restaurant - Selected restaurant data
@@ -280,7 +318,7 @@ function selectRestaurant(restaurant) {
 
   selectedName.textContent = restaurant.name;
   selectedAddress.textContent = `${restaurant.address || ""}, ${restaurant.postalCode || ""} ${restaurant.city || ""}`;
-
+  updateSelectedFavButton(restaurant);
   // center map on selected restaurant if coordinates exist
   if (map && restaurant.location?.coordinates) {
     const coords = restaurant.location.coordinates;
@@ -445,10 +483,6 @@ async function initApp() {
     // Build city dropdown options & render initial state
     populateCityFilter();
     filterAndRenderRestaurants();
-
-    // Build city dropdown options & render initial state
-    populateCityFilter();
-    filterAndRenderRestaurants();
   } catch (error) {
     loadingMessage.hidden = true;
     errorMessage.hidden = false;
@@ -461,6 +495,11 @@ async function initApp() {
 searchInput.addEventListener("input", filterAndRenderRestaurants);
 citySelect.addEventListener("change", filterAndRenderRestaurants);
 sortSelect.addEventListener("change", filterAndRenderRestaurants);
+selectedFavBtn.addEventListener("click", () => {
+  if (activeRestaurant) {
+    toggleFavoriteRestaurant(activeRestaurant._id);
+  }
+});
 
 // Daily / weekly Tab Handlers
 
@@ -572,6 +611,7 @@ async function checkSavedSession() {
     });
     currentUser = userData;
     updateAuthUI();
+    filterAndRenderRestaurants();
   } catch (error) {
     // Token expired or invalid -> clear stored session
     console.warn("Saved session invalid:", error.message);
@@ -647,6 +687,10 @@ async function handleLogin(event) {
 
     loginForm.reset();
     updateAuthUI();
+    filterAndRenderRestaurants();
+    if (activeRestaurant) {
+      updateSelectedFavButton(activeRestaurant);
+    }
     authModal.close();
   } catch (error) {
     showAuthMessage(error.message, true);
@@ -714,6 +758,48 @@ function logoutUser() {
   authToken = null;
   currentUser = null;
   updateAuthUI();
+  filterAndRenderRestaurants();
+  if (activeRestaurant) {
+    updateSelectedFavButton(activeRestaurant);
+  }
+}
+/**
+ * Sets or toggles the logged-in user's favouriteRestaurant via PUT /users
+ * @param {string} restaurantId - The _id of the restaurant to favorite
+ */
+async function toggleFavoriteRestaurant(restaurantId) {
+  if (!currentUser || !authToken) {
+    switchAuthMode("login");
+    authModal.showModal();
+    return;
+  }
+
+  const isAlreadyFavorite = currentUser.favouriteRestaurant === restaurantId;
+  const newFavoriteId = isAlreadyFavorite ? "" : restaurantId;
+
+  try {
+    const result = await fetchData(`${API_URL}/users`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ favouriteRestaurant: newFavoriteId }),
+    });
+
+    currentUser = result.data || {
+      ...currentUser,
+      favouriteRestaurant: newFavoriteId,
+    };
+
+    filterAndRenderRestaurants();
+    if (activeRestaurant) {
+      updateSelectedFavButton(activeRestaurant);
+    }
+  } catch (error) {
+    console.error("Failed to update favorite restaurant:", error.message);
+    alert(`Could not update favorite: ${error.message}`);
+  }
 }
 
 // Auth Modal & Form Event Listeners

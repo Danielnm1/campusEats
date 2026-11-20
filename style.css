@@ -1025,3 +1025,59 @@ button {
 [hidden] {
   display: none !important;
 }
+
+
+/* =================================
+15. FAVORITE RESTAURANT CONTROLS
+========================================= */
+
+.selected-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.selected-header-row .selected-restaurant-info {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.fav-btn {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: transform 0.15s ease, color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.fav-btn:hover {
+  color: #d97706;
+  border-color: #f59e0b;
+  background-color: #fffbeb;
+  transform: scale(1.08);
+}
+
+.fav-btn.is-favorite {
+  color: #f59e0b;
+  border-color: #f59e0b;
+  background-color: #fffbeb;
+}
+
+.fav-btn-lg {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 8px 14px;
+}
+
+.is-favorite-card {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
+}
