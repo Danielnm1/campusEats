@@ -486,6 +486,10 @@
           </div>
           <button type="submit" class="btn-secondary-full">Upload Avatar</button>
         </form>
+        <!-- Profile Update button -->
+        <button type="button" id="open-edit-profile-btn" class="btn-secondary-full">
+          Edit Account Details
+        </button>
 
         <hr class="modal-divider">
 
@@ -493,6 +497,41 @@
         <button type="button" id="logout-btn" class="btn-danger-full">
           Log out
         </button>
+      </div>
+    </dialog>
+
+  <!-- Edit Account Details Modal -->
+    <dialog id="edit-profile-modal" class="auth-dialog" aria-labelledby="edit-profile-modal-title">
+      <div class="dialog-inner">
+        <div class="dialog-header">
+          <h3 id="edit-profile-modal-title">Edit Account Details</h3>
+          <button type="button" id="close-edit-profile-btn" class="dialog-close-btn" aria-label="Close modal">
+            ✕
+          </button>
+        </div>
+
+        <p id="edit-profile-message" class="status-message" hidden></p>
+
+        <form id="profile-update-form" class="auth-form">
+          <div class="form-field">
+            <label for="edit-username">Username</label>
+            <input type="text" id="edit-username" name="username" required minlength="3" autocomplete="username">
+          </div>
+
+          <div class="form-field">
+            <label for="edit-email">Email</label>
+            <input type="email" id="edit-email" name="email" required autocomplete="email">
+          </div>
+
+          <div class="form-field">
+            <label for="edit-password">New Password (leave blank to keep current)</label>
+            <input type="password" id="edit-password" name="password" minlength="5" placeholder="••••••••" autocomplete="new-password">
+          </div>
+
+          <button type="submit" class="primary-button full-width-btn">
+            Save Changes
+          </button>
+        </form>
       </div>
     </dialog>
 

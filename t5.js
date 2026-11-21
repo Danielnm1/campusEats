@@ -59,6 +59,14 @@ const profileDisplayEmail = document.getElementById("profile-display-email");
 const avatarForm = document.getElementById("avatar-form");
 const avatarFileInput = document.getElementById("avatar-file");
 const logoutBtn = document.getElementById("logout-btn");
+const profileUpdateForm = document.getElementById("profile-update-form");
+const editProfileModal = document.getElementById("edit-profile-modal");
+const openEditProfileBtn = document.getElementById("open-edit-profile-btn");
+const closeEditProfileBtn = document.getElementById("close-edit-profile-btn");
+const editProfileMessage = document.getElementById("edit-profile-message");
+const editUsernameInput = document.getElementById("edit-username");
+const editEmailInput = document.getElementById("edit-email");
+const editPasswordInput = document.getElementById("edit-password");
 
 // 2. Application State Variables
 
@@ -865,6 +873,54 @@ async function handleAvatarUpload(event) {
   }
 }
 
+function openEditProfileModal() {
+  if (!currentUser) return;
+  editProfileMessage.hidden = true;
+  editUsernameInput.value = currentUser.username || "";
+  editEmailInput.value = currentUser.email || "";
+  editPasswordInput.value = "";
+  editProfileModal.showModal();
+}
+
+async function handleProfileUpdate(event) {
+  event.preventDefault();
+  if (!authToken || !currentUser) return;
+
+  const payload = {
+    username: editUsernameInput.value.trim(),
+    email: editEmailInput.value.trim(),
+  };
+
+  const newPassword = editPasswordInput.value.trim();
+  if (newPassword) {
+    payload.password = newPassword;
+  }
+
+  try {
+    const result = await fetchData(`${API_URL}/users`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    currentUser = result.data || { ...currentUser, ...payload };
+    updateAuthUI();
+    editProfileModal.close();
+    openProfileModal();
+
+    profileMessage.textContent = "Account details updated!";
+    profileMessage.className = "status-message success-message";
+    profileMessage.hidden = false;
+  } catch (error) {
+    editProfileMessage.textContent = error.message;
+    editProfileMessage.className = "status-message error-message";
+    editProfileMessage.hidden = false;
+  }
+}
+
 /**
  * Logs out the current user and clears localStorage token
  */
@@ -947,6 +1003,13 @@ profileModal.addEventListener("click", (event) => {
 });
 
 avatarForm.addEventListener("submit", handleAvatarUpload);
+
+openEditProfileBtn.addEventListener("click", openEditProfileModal);
+closeEditProfileBtn.addEventListener("click", () => editProfileModal.close());
+editProfileModal.addEventListener("click", (event) => {
+  if (event.target === editProfileModal) editProfileModal.close();
+});
+profileUpdateForm.addEventListener("submit", handleProfileUpdate);
 
 logoutBtn.addEventListener("click", () => {
   logoutUser();

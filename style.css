@@ -1,7 +1,5 @@
 
-/*
-   1. GENERAL SETTINGS
-/*========================================= */
+/* 1. GENERAL SETTINGS */
 
 :root {
     --primary-color: #287a55;
@@ -43,11 +41,6 @@ select {
     font: inherit;
 }
 
-button,
-a,
-select {
-    -webkit-tap-highlight-color: transparent;
-}
 
 a {
     color: inherit;
@@ -64,9 +57,7 @@ button {
 }
 
 
-/* =========================================
-   2. HEADER AND NAVIGATION
-========================================= */
+/* 2. HEADER AND NAVIGATION */
 
 .site-header {
     background-color: #ffffff;
@@ -123,9 +114,7 @@ button {
 }
 
 
-/* =========================================
-   3. HERO SECTION
-========================================= */
+/* 3. HERO SECTION */
 
 .hero {
     background-color: var(--surface-color);
@@ -182,9 +171,7 @@ button {
 }
 
 
-/* =========================================
-   4. MAIN CONTENT
-========================================= */
+/* 4. MAIN CONTENT */
 
 .main-section {
     padding-top: 75px;
@@ -242,9 +229,7 @@ button {
 }
 
 
-/* =========================================
-   5. SEARCH AND FILTERS
-========================================= */
+/* 5. SEARCH AND Filters */
 
 .search-wrapper {
     margin-bottom: 18px;
@@ -284,10 +269,7 @@ button {
     margin-bottom: 22px;
 }
 
-
-/* =========================================
-   6. RESTAURANT DIRECTORY
-========================================= */
+/* 6. RESTAURANT DIRECTORY */
 
 .restaurant-list {
     display: flex;
@@ -377,9 +359,7 @@ button {
 }
 
 
-/* =========================================
-   7. MENU PANEL
-========================================= */
+/* 7. MENU PANEL */
 
 .menu-panel {
     min-height: 500px;
@@ -425,9 +405,7 @@ button {
 }
 
 
-/* =========================================
-   8. DAILY AND WEEKLY MENU TABS
-========================================= */
+/* 8. DAILY AND WEEKLY MENU TABS */
 
 .menu-tabs {
     display: flex;
@@ -459,9 +437,7 @@ button {
 }
 
 
-/* =========================================
-   9. MENU CONTENT
-========================================= */
+/* 9. MENU CONTENT */
 
 .menu-content {
     display: flex;
@@ -493,9 +469,7 @@ button {
 }
 
 
-/* =========================================
-   10. MAP SECTION
-========================================= */
+/* 10. MAP SECTION */
 
 .map-section {
     margin-top: 35px;
@@ -531,9 +505,7 @@ button {
 }
 
 
-/* =========================================
-   11. ABOUT SECTION
-========================================= */
+/* 11. ABOUT SECTION */
 
 .about-section {
     padding: 65px 0;
@@ -558,9 +530,7 @@ button {
 }
 
 
-/* =========================================
-   12. FOOTER
-========================================= */
+/* 12. FOOTER */
 
 .site-footer {
     padding: 25px 0;
@@ -586,9 +556,7 @@ button {
 }
 
 
-/* =========================================
-   13. RESPONSIVE DESIGN
-========================================= */
+/* 13. RESPONSIVE DESIGN */
 
 @media (max-width: 850px) {
 
@@ -759,9 +727,7 @@ button {
 .menu-placeholder[hidden] {
   display: none;
 }
-/* =========================================
-14. AUTHENTICATION MODAL & HEADER CONTROLS
-========================================= */
+/* 14. AUTHENTICATION MODAL & HEADER CONTROLS */
 
 .nav-auth-btn {
   padding: 8px 16px;
@@ -1017,9 +983,7 @@ button {
 }
 
 
-/* =================================
-15. FAVORITE RESTAURANT CONTROLS
-========================================= */
+/* 15. FAVORITE RESTAURANT CONTROLS */
 
 .selected-header-row {
   display: flex;
@@ -1072,9 +1036,7 @@ button {
   box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.18);
 }
 
-/* ======================
-16. WEEKLY MENU & MAP POPUP STYLES
-=============================== */
+/* 16. WEEKLY MENU & MAP POPUP STYLES */
 
 .weekly-day-group {
   margin-bottom: 18px;
@@ -1120,9 +1082,9 @@ button {
 .geo-btn {
   width: 100%;
   padding: 0.6rem 1rem;
-  border-radius: var(--radius-sm);
+  border-radius:7px;
   border: 1px solid var(--primary-color);
-  background-color: var(--primary-soft);
+  background-color: var(--primary-light);
   color: var(--primary-dark);
   font-weight: 600;
   font-size: 0.9rem;
@@ -1157,7 +1119,7 @@ button {
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--primary-dark);
-  background-color: var(--primary-soft);
+  background-color: var(--primary-light);
   border-radius: 999px;
 }
 
@@ -1176,3 +1138,6 @@ button {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.25);
 }
 
+#open-edit-profile-btn {
+  margin-top: 0.75rem;
+}
