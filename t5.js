@@ -151,20 +151,31 @@ function updateMapMarkers(displayedRestaurants) {
     bounds.push(latLng);
     // Create marker
     const marker = L.marker(latLng).addTo(map);
-    const distanceLine =
-      typeof restaurant.distanceKm === "number"
-        ? `<br><small class="map-popup-address">${restaurant.distanceKm.toFixed(1)} km away</small>`
-        : "";
 
-    // Popup content
-    const popupContent = `
-      <div class="map-popup">
-        <strong class="map-popup-title">${restaurant.name}</strong>
-        <small class="map-popup-address">${restaurant.address || ""}, ${restaurant.city || ""}</small>
-        ${distanceLine}
-        </div>
-    `;
-    marker.bindPopup(popupContent);
+    const popupContainer = document.createElement("div");
+    popupContainer.className = "map-popup";
+
+    const titleEl = document.createElement("strong");
+    titleEl.className = "map-popup-title";
+    titleEl.textContent = restaurant.name || "Unknown restaurant";
+
+    const addressEl = document.createElement("small");
+    addressEl.className = "map-popup-address";
+    addressEl.textContent = `${restaurant.address || ""}, ${restaurant.city || ""}`;
+
+    popupContainer.append(titleEl, addressEl);
+
+    if (
+      typeof restaurant.distanceKm === "number" &&
+      isFinite(restaurant.distanceKm)
+    ) {
+      const distanceEl = document.createElement("small");
+      distanceEl.className = "map-popup-address";
+      distanceEl.textContent = `${restaurant.distanceKm.toFixed(1)} km away`;
+      popupContainer.append(document.createElement("br"), distanceEl);
+    }
+
+    marker.bindPopup(popupContainer);
 
     // Click marker -> select restaurant in UI
     marker.on("click", () => {
@@ -458,31 +469,40 @@ function selectRestaurant(restaurant) {
  * Fetches and displays daily or weekly menu for the active restaurant
  */
 
+let menuRequestId = 0;
+
 async function loadMenu() {
   if (!activeRestaurant) return;
+
+  const requestId = ++menuRequestId;
+  const restaurantId = activeRestaurant._id;
+  const menuType = activeMenuType;
 
   menuContent.textContent = "";
   menuError.textContent = "";
   menuError.hidden = true;
   menuLoading.hidden = false;
-  menuLoading.textContent = `Loading ${activeMenuType} menu...`;
+  menuLoading.textContent = `Loading ${menuType} menu...`;
 
   try {
-    const restaurantId = activeRestaurant._id;
     if (!restaurantId) {
       throw new Error("Selected restaurant has no valid _id.");
     }
 
-    // Endpoints: /restaurants/daily/:id/en OR /restaurants/weekly/:id/en
-
-    const menuEndpoint = `${API_URL}/restaurants/${activeMenuType}/${encodeURIComponent(restaurantId)}/en`;
+    const menuEndpoint = `${API_URL}/restaurants/${menuType}/${encodeURIComponent(restaurantId)}/en`;
     const menuData = await fetchData(menuEndpoint);
+
+    // Ignore stale response if user selected another restaurant or tab
+    if (requestId !== menuRequestId) return;
+
     menuLoading.hidden = true;
-    displayMenuData(menuData);
+    displayMenuData(menuData, menuType);
   } catch (error) {
+    if (requestId !== menuRequestId) return;
+
     menuLoading.hidden = true;
     menuError.hidden = false;
-    menuError.textContent = `Could not load ${activeMenuType} menu: ${error.message}`;
+    menuError.textContent = `Could not load ${menuType} menu: ${error.message}`;
     console.error("Menu load error:", error);
   }
 }
@@ -491,13 +511,13 @@ async function loadMenu() {
  * @param {Object} menuData - Daily or weekly menu payload from Metropolia API
  */
 
-function displayMenuData(menuData) {
+function displayMenuData(menuData, menuType = activeMenuType) {
   menuContent.textContent = "";
   // ------------------------------
   // A. Daily Menu Display Logic
   // ------------------------------
 
-  if (activeMenuType === "daily") {
+  if (menuType === "daily") {
     const courses = menuData.courses;
 
     if (!Array.isArray(courses) || courses.length === 0) {
@@ -524,7 +544,7 @@ function displayMenuData(menuData) {
     // ------------------------------
     // B. Weekly Menu Display Logic
     // ------------------------------
-  } else if (activeMenuType === "weekly") {
+  } else if (menuType === "weekly") {
     const days = menuData.days;
     if (!Array.isArray(days) || days.length === 0) {
       menuContent.textContent = "No weekly menu information available.";
@@ -569,14 +589,23 @@ function displayMenuData(menuData) {
   }
 }
 
-// ----------------------------------------
 // 7. Core Initialization & Event Listeners
-// ----------------------------------------
 
 /**
  * Loads master restaurant list on startup
  */
 async function initApp() {
+  if (
+    !searchInput ||
+    !citySelect ||
+    !sortSelect ||
+    !restaurantList ||
+    !menuContent
+  ) {
+    console.error("Required DOM elements are missing from index.html.");
+    return;
+  }
+
   loadingMessage.hidden = false;
   errorMessage.hidden = true;
 
@@ -770,17 +799,19 @@ async function handleRegister(event) {
     loginForm.username.value = username;
     showAuthMessage("Account created! Please log in.", false);
   } catch (error) {
-    // Handle Metropolia server's outgoing SMTP mail error (535) gracefully
+    // Metropolia's backend saves the user before attempting to send a confirmation email,
+    // which can fail with an SMTP 535 authentication error.
     if (error.message.includes("535")) {
       registerForm.reset();
       switchAuthMode("login");
       loginForm.username.value = username;
       showAuthMessage(
-        "Account registered (confirmation email skipped by server). Please log in!",
+        "The server encountered an email delivery error (535), which usually happens after the account is saved. Please try logging in.",
         false,
       );
       return;
     }
+
     showAuthMessage(error.message, true);
   }
 }
